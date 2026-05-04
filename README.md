@@ -13,35 +13,19 @@ Neovim plugin for Salesforce-style formula files (`.sff`).
 - Neovim `0.10+`
 - `sf_formula_lsp` available on `PATH`, or set `vim.g.sf_formula_lsp_cmd`
 
-## Setup (auto-install LSP if missing)
+## Setup
 
 ```lua
 {
   "ThatOneShortGuy/sf_formula.nvim",
   ft = { "sff" },
   build = function()
-    if vim.fn.executable("sf_formula_lsp") == 1 then
-      return
-    end
-
-    local cmd = {
-      "cargo",
-      "install",
-      "--locked",
-      "--git",
-      "https://github.com/ThatOneShortGuy/sf-formula-parser",
-      "sf_formula_lsp",
-    }
-
-    local result = vim.system(cmd, { text = true }):wait()
-    if result.code ~= 0 then
-      error(result.stderr ~= "" and result.stderr or result.stdout)
-    end
+    require("sf_formula.build").ensure_lsp()
   end,
 }
 ```
 
-This installs `sf_formula_lsp` once during plugin build (`:Lazy sync`) when missing.
+This checks the upstream git `HEAD` hash during plugin build (`:Lazy sync`) and reinstalls `sf_formula_lsp` when missing or out of date.
 
 If you prefer a custom binary location, set:
 
