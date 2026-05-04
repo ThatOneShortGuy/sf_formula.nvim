@@ -4,12 +4,31 @@ local REPO_URL = "https://github.com/ThatOneShortGuy/sf-formula-parser"
 local REV_FILE = vim.fs.joinpath(vim.fn.stdpath("data"), "sf_formula_lsp_rev")
 local INSTALL_ROOT = vim.fs.joinpath(vim.fn.stdpath("data"), "sf_formula_nvim")
 
+local function is_windows()
+	return vim.loop.os_uname().sysname == "Windows_NT"
+end
+
 local function installed_bin()
 	local bin = vim.fs.joinpath(INSTALL_ROOT, "bin", "sf_formula_lsp")
-	if vim.loop.os_uname().sysname == "Windows_NT" then
+	if is_windows() then
 		return bin .. ".exe"
 	end
 	return bin
+end
+
+local function run_install(cmd)
+	local result = vim.system(cmd, { text = true }):wait()
+	if result.code == 0 then
+		return result
+	end
+
+	local stderr = result.stderr or ""
+	if is_windows() and stderr:find("Access is denied", 1, true) then
+		vim.system({ "taskkill", "/IM", "sf_formula_lsp.exe", "/F" }, { text = true }):wait()
+		result = vim.system(cmd, { text = true }):wait()
+	end
+
+	return result
 end
 
 local function lsp_cmd()
@@ -98,7 +117,7 @@ function M.ensure_lsp()
 		table.insert(install_cmd, 10, remote_rev)
 	end
 
-	local result = vim.system(install_cmd, { text = true }):wait()
+	local result = run_install(install_cmd)
 	if result.code ~= 0 then
 		error(result.stderr ~= "" and result.stderr or result.stdout)
 	end
