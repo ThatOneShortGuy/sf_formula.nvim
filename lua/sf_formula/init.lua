@@ -1,0 +1,58 @@
+local M = {}
+
+local function plugin_repo_root()
+	local source = debug.getinfo(1, "S").source:sub(2)
+	local this_dir = vim.fn.fnamemodify(source, ":p:h")
+	-- this_dir = .../sf_formula.nvim/lua/sf_formula
+	return vim.fs.normalize(vim.fs.joinpath(this_dir, "..", "..", ".."))
+end
+
+local function find_cmd()
+	if vim.g.sf_formula_lsp_cmd then
+		return vim.g.sf_formula_lsp_cmd
+	end
+
+	if vim.fn.executable("sf_formula_lsp") == 1 then
+		return { "sf_formula_lsp" }
+	end
+
+	local repo_root = plugin_repo_root()
+	local unix_bin = vim.fs.joinpath(repo_root, "target", "release", "sf_formula_lsp")
+	local win_bin = unix_bin .. ".exe"
+
+	if vim.fn.executable(unix_bin) == 1 then
+		return { unix_bin }
+	end
+
+	if vim.fn.executable(win_bin) == 1 then
+		return { win_bin }
+	end
+
+	return nil
+end
+
+function M.start_lsp_for_current_buffer()
+	local cmd = find_cmd()
+	if not cmd then
+		vim.notify("sf_formula_lsp not found. Set vim.g.sf_formula_lsp_cmd or put it on PATH.", vim.log.levels.ERROR)
+		return
+	end
+
+	local root = vim.fs.root(0, { ".git", "Cargo.toml" }) or vim.fn.getcwd()
+
+	local client_id = vim.lsp.start({
+		name = "sf-formula-lsp",
+		cmd = cmd,
+		root_dir = root,
+	}, {
+		reuse_client = function(client, config)
+			return client.name == config.name and client.config.root_dir == config.root_dir
+		end,
+	})
+
+	if not client_id then
+		vim.notify("Failed to start sf_formula_lsp", vim.log.levels.ERROR)
+	end
+end
+
+return M
