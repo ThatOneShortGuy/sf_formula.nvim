@@ -31,6 +31,19 @@ local function run_install(cmd)
 	return result
 end
 
+local function restart_attached_sff_buffers()
+	local ok, sf_formula = pcall(require, "sf_formula")
+	if not ok then
+		return
+	end
+
+	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].filetype == "sff" then
+			sf_formula.start_lsp_for_buffer(bufnr)
+		end
+	end
+end
+
 local function lsp_cmd()
 	if vim.g.sf_formula_lsp_cmd and vim.g.sf_formula_lsp_cmd[1] then
 		return vim.g.sf_formula_lsp_cmd[1]
@@ -123,6 +136,7 @@ function M.ensure_lsp()
 	end
 
 	write_rev(remote_rev)
+	restart_attached_sff_buffers()
 end
 
 return M

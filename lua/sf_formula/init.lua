@@ -44,19 +44,21 @@ local function find_cmd()
 	return nil
 end
 
-function M.start_lsp_for_current_buffer()
+function M.start_lsp_for_buffer(bufnr)
 	local cmd = find_cmd()
 	if not cmd then
 		vim.notify("sf_formula_lsp not found. Run :Lazy sync, set vim.g.sf_formula_lsp_cmd, or put it on PATH.", vim.log.levels.ERROR)
 		return
 	end
 
-	local root = vim.fs.root(0, { ".git", "Cargo.toml" }) or vim.fn.getcwd()
+	bufnr = bufnr or 0
+	local root = vim.fs.root(bufnr, { ".git", "Cargo.toml" }) or vim.fn.getcwd()
 
 	local client_id = vim.lsp.start({
 		name = "sf-formula-lsp",
 		cmd = cmd,
 		root_dir = root,
+		bufnr = bufnr,
 	}, {
 		reuse_client = function(client, config)
 			return client.name == config.name and client.config.root_dir == config.root_dir
@@ -66,6 +68,10 @@ function M.start_lsp_for_current_buffer()
 	if not client_id then
 		vim.notify("Failed to start sf_formula_lsp", vim.log.levels.ERROR)
 	end
+end
+
+function M.start_lsp_for_current_buffer()
+	M.start_lsp_for_buffer(0)
 end
 
 return M
