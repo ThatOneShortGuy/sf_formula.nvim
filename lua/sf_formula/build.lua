@@ -2,6 +2,15 @@ local M = {}
 
 local REPO_URL = "https://github.com/ThatOneShortGuy/sf-formula-parser"
 local REV_FILE = vim.fs.joinpath(vim.fn.stdpath("data"), "sf_formula_lsp_rev")
+local INSTALL_ROOT = vim.fs.joinpath(vim.fn.stdpath("data"), "sf_formula_nvim")
+
+local function installed_bin()
+	local bin = vim.fs.joinpath(INSTALL_ROOT, "bin", "sf_formula_lsp")
+	if vim.loop.os_uname().sysname == "Windows_NT" then
+		return bin .. ".exe"
+	end
+	return bin
+end
 
 local function lsp_cmd()
 	if vim.g.sf_formula_lsp_cmd and vim.g.sf_formula_lsp_cmd[1] then
@@ -10,6 +19,11 @@ local function lsp_cmd()
 
 	if vim.fn.executable("sf_formula_lsp") == 1 then
 		return "sf_formula_lsp"
+	end
+
+	local local_bin = installed_bin()
+	if vim.fn.executable(local_bin) == 1 then
+		return local_bin
 	end
 
 	return nil
@@ -76,14 +90,16 @@ function M.ensure_lsp()
 		"install",
 		"--force",
 		"--locked",
+		"--root",
+		INSTALL_ROOT,
 		"--git",
 		REPO_URL,
 		"sf_formula_lsp",
 	}
 
 	if remote_rev then
-		table.insert(install_cmd, 7, "--rev")
-		table.insert(install_cmd, 8, remote_rev)
+		table.insert(install_cmd, 9, "--rev")
+		table.insert(install_cmd, 10, remote_rev)
 	end
 
 	local result = vim.system(install_cmd, { text = true }):wait()

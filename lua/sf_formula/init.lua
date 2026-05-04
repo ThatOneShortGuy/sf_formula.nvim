@@ -1,5 +1,13 @@
 local M = {}
 
+local function installed_bin()
+	local bin = vim.fs.joinpath(vim.fn.stdpath("data"), "sf_formula_nvim", "bin", "sf_formula_lsp")
+	if vim.loop.os_uname().sysname == "Windows_NT" then
+		return bin .. ".exe"
+	end
+	return bin
+end
+
 local function plugin_repo_root()
 	local source = debug.getinfo(1, "S").source:sub(2)
 	local this_dir = vim.fn.fnamemodify(source, ":p:h")
@@ -14,6 +22,11 @@ local function find_cmd()
 
 	if vim.fn.executable("sf_formula_lsp") == 1 then
 		return { "sf_formula_lsp" }
+	end
+
+	local local_bin = installed_bin()
+	if vim.fn.executable(local_bin) == 1 then
+		return { local_bin }
 	end
 
 	local repo_root = plugin_repo_root()
@@ -34,7 +47,7 @@ end
 function M.start_lsp_for_current_buffer()
 	local cmd = find_cmd()
 	if not cmd then
-		vim.notify("sf_formula_lsp not found. Set vim.g.sf_formula_lsp_cmd or put it on PATH.", vim.log.levels.ERROR)
+		vim.notify("sf_formula_lsp not found. Run :Lazy sync, set vim.g.sf_formula_lsp_cmd, or put it on PATH.", vim.log.levels.ERROR)
 		return
 	end
 

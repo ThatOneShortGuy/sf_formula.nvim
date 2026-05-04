@@ -26,6 +26,7 @@ Neovim plugin for Salesforce-style formula files (`.sff`).
 ```
 
 This checks the upstream git `HEAD` hash during plugin build (`:Lazy sync`) and reinstalls `sf_formula_lsp` when missing or out of date.
+The binary is installed to `stdpath("data") .. "/sf_formula_nvim/bin"`, so it does not need to be on your shell `PATH`.
 
 If you prefer a custom binary location, set:
 
