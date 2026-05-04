@@ -81,10 +81,6 @@ function M.ensure_lsp()
 		return
 	end
 
-	if cmd and not remote_rev then
-		return
-	end
-
 	local install_cmd = {
 		"cargo",
 		"install",
